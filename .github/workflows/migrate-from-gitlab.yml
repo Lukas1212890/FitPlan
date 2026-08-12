@@ -1,10 +1,6 @@
 name: Migrate FitPlan from GitLab
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/migrate-from-gitlab.yml'
   workflow_dispatch:
 
 permissions:
@@ -19,8 +15,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Clone FitPlan from GitLab
-        run: git clone --depth 1 https://gitlab.com/Lukas1212890/fitplan.git /tmp/fitplan-gitlab
+      - name: Clone FitPlan from private GitLab repository
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          test -n "$GITLAB_TOKEN" || (echo "Missing GITLAB_TOKEN repository secret" && exit 1)
+          git clone --depth 1 "https://oauth2:${GITLAB_TOKEN}@gitlab.com/Lukas1212890/fitplan.git" /tmp/fitplan-gitlab
 
       - name: Copy project files
         run: |
