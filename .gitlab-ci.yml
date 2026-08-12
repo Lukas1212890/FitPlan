@@ -1,0 +1,15 @@
+image: node:22
+
+pages:
+  stage: deploy
+  script:
+    - corepack enable
+    - pnpm install --frozen-lockfile
+    - pnpm run build:mobile
+  pages:
+    publish: mobile-dist
+  artifacts:
+    paths:
+      - mobile-dist
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
