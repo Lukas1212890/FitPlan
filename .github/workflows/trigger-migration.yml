@@ -1,0 +1,20 @@
+name: Trigger FitPlan migration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/trigger-migration.yml'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start migration workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run migrate-from-gitlab.yml --repo "$GITHUB_REPOSITORY" --ref main
