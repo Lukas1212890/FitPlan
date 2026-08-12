@@ -1,0 +1,44 @@
+name: Import FitPlan
+
+on:
+  push:
+    paths:
+      - .github/workflows/import-fitplan.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct FitPlan source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          : > bundle.b64
+          for sha in \
+            357351196dbd515570a0f61cb533432774dbf285 \
+            7bea603ab97a47bba460543cae6c6594ff7cb063 \
+            8745bb2bd896116e84ad2a25525fe635b943a583 \
+            7bb9380475dc2d98fce3ae5bfca212dfa4aaf2e8 \
+            9206e37bcb50a4edce9aa6b288f14a8ceb2fef3f \
+            ec2696f1cb211121130c28bfbbbb48e7a8024532
+          do
+            gh api "repos/${GITHUB_REPOSITORY}/git/blobs/$sha" --jq .content | tr -d '\n' | base64 -d >> bundle.b64
+          done
+          base64 -d bundle.b64 > bundle.zip
+          mkdir imported
+          unzip -q bundle.zip -d imported
+          find . -mindepth 1 -maxdepth 1 ! -name .git ! -name imported -exec rm -rf {} +
+          cp -a imported/. .
+          rm -rf imported bundle.b64 bundle.zip
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Import FitPlan source from GitLab"
+          git push
